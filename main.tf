@@ -27,7 +27,7 @@ data "aws_iam_policy_document" "assume_role" {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
 
-    principals = {
+    principals {
       type        = "Service"
       identifiers = ["codepipeline.amazonaws.com"]
     }
@@ -140,24 +140,19 @@ resource "aws_codepipeline" "codepipeline" {
 resource "aws_iam_role" "codebuild_role" {
   name                  = "${var.name}-codebuild-role"
   force_detach_policies = true
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "codebuild.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
+  assume_role_policy    = data.aws_iam_policy_document.codebuild_assume.json
+  tags                  = local.default_tags
 }
-EOF
 
-
-  tags = local.default_tags
+data "aws_iam_policy_document" "codebuild_assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["codebuild.amazonaws.com"]
+    }
+  }
 }
 
 data "aws_iam_policy_document" "codebuild_policy" {
